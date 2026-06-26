@@ -1,0 +1,1733 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bill Tracker</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071018;
+      --bg2: #0c1620;
+      --panel: rgba(13, 23, 34, 0.88);
+      --panel-strong: #0f1b28;
+      --border: rgba(143, 178, 205, 0.16);
+      --border-strong: rgba(143, 178, 205, 0.28);
+      --text: #e8f1f7;
+      --muted: #92a6b8;
+      --muted-2: #6e8396;
+      --accent: #58d4c2;
+      --accent-2: #79a8ff;
+      --danger: #f06a70;
+      --warning: #f0b35b;
+      --ok: #66d18f;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.36);
+      --radius: 22px;
+      --radius-sm: 14px;
+      --focus: 0 0 0 3px rgba(88, 212, 194, 0.18);
+      --max: 1200px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(88, 212, 194, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(121, 168, 255, 0.12), transparent 28%),
+        linear-gradient(180deg, var(--bg), #060b11 72%);
+      font-family: "Avenir Next", "Segoe UI", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.26), rgba(0,0,0,0));
+      opacity: 0.4;
+    }
+
+    .app {
+      position: relative;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1.3fr auto;
+      align-items: end;
+      padding: 10px 2px 2px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(88, 212, 194, 0.12);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.8rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      max-width: 68ch;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 0.92rem;
+      backdrop-filter: blur(14px);
+    }
+
+    .pill strong { color: var(--text); font-weight: 600; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.05fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 18px 18px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field-row {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 0.86rem;
+      letter-spacing: 0.01em;
+    }
+
+    input, select, button, textarea {
+      font: inherit;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      color: var(--text);
+      background: var(--panel-strong);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: var(--muted-2);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(88, 212, 194, 0.55);
+      box-shadow: var(--focus);
+    }
+
+    textarea {
+      min-height: 94px;
+      resize: vertical;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, opacity 0.16s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .btn:hover { transform: translateY(-1px); border-color: var(--border-strong); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(88, 212, 194, 0.22), rgba(121, 168, 255, 0.20));
+      border-color: rgba(88, 212, 194, 0.34);
+    }
+
+    .btn-ghost {
+      background: transparent;
+    }
+
+    .btn-danger {
+      border-color: rgba(240, 106, 112, 0.28);
+      color: #ffb8bb;
+    }
+
+    .tiny {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .dropzone {
+      border: 1.5px dashed rgba(143, 178, 205, 0.22);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    }
+
+    .dropzone:hover {
+      border-color: rgba(88, 212, 194, 0.46);
+      transform: translateY(-1px);
+    }
+
+    .dropzone.is-dragover {
+      border-color: rgba(88, 212, 194, 0.7);
+      background: rgba(88, 212, 194, 0.08);
+    }
+
+    .dropzone-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .dropzone-title {
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .dropzone-meta {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .dropzone-file {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .thumb {
+      width: 88px;
+      height: 88px;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: #09111a;
+      flex: 0 0 auto;
+    }
+
+    .thumb-placeholder {
+      width: 88px;
+      height: 88px;
+      border-radius: 16px;
+      border: 1px dashed rgba(143, 178, 205, 0.18);
+      display: grid;
+      place-items: center;
+      color: var(--muted-2);
+      background: rgba(255,255,255,0.02);
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 8px;
+      flex: 0 0 auto;
+    }
+
+    .inline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(143, 178, 205, 0.16), transparent);
+      margin: 14px 0;
+    }
+
+    .preview-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .preview-grid .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .status {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .status strong { color: var(--text); }
+
+    .status.error { color: #ffb8bb; }
+    .status.success { color: #9de0b5; }
+    .status.warning { color: #ffd59d; }
+
+    .history-tools {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+      max-height: 520px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .record {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      border-radius: 18px;
+      padding: 12px;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 64px minmax(0, 1fr) auto;
+      align-items: center;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .record:hover {
+      transform: translateY(-1px);
+      border-color: rgba(88, 212, 194, 0.34);
+      background: rgba(255,255,255,0.045);
+    }
+
+    .record-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: #09111a;
+    }
+
+    .record-body {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .record-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .record-btn {
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+    }
+
+    .record-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-weight: 700;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(88, 212, 194, 0.12);
+      color: #9ee6da;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .record-meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .record-amount {
+      font-weight: 800;
+      font-size: 1.05rem;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      border: 1px dashed rgba(143, 178, 205, 0.18);
+      border-radius: 18px;
+      padding: 22px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(1, 5, 10, 0.72);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+
+    .modal.open { display: flex; }
+
+    .modal-card {
+      width: min(1100px, 100%);
+      max-height: min(92vh, 1080px);
+      overflow: auto;
+      background: #0b131b;
+      border: 1px solid var(--border-strong);
+      border-radius: 24px;
+      box-shadow: 0 40px 90px rgba(0,0,0,0.52);
+    }
+
+    .modal-head {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(11, 19, 27, 0.92);
+      backdrop-filter: blur(10px);
+      z-index: 1;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .modal-content {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 0;
+    }
+
+    .modal-image-wrap {
+      padding: 18px;
+      border-right: 1px solid var(--border);
+      background: #071018;
+    }
+
+    .modal-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: #09111a;
+    }
+
+    .modal-details {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail {
+      display: grid;
+      gap: 6px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+    }
+
+    .detail label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .detail div {
+      word-break: break-word;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @media (max-width: 960px) {
+      .hero, .layout, .modal-content {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        justify-content: flex-start;
+      }
+
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .record {
+        grid-template-columns: 58px minmax(0, 1fr);
+      }
+
+      .record-amount {
+        grid-column: 2;
+      }
+
+      .modal-image-wrap {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        padding: 14px;
+      }
+
+      .panel-head, .panel-body {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .record {
+        grid-template-columns: 58px minmax(0, 1fr);
+      }
+
+      .record-amount {
+        grid-column: 1 / -1;
+      }
+
+      .btn, input, select, textarea {
+        border-radius: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Bill tracker</div>
+        <h1>Capture TNB bills in seconds.</h1>
+        <p class="subtitle">
+          Paste or upload a screenshot, extract bill fields with OpenRouter Vision, review the preview, and save to local storage.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <div class="pill"><strong>Fast path</strong> Paste, extract, save</div>
+        <div class="pill"><strong>Local</strong> Records stay on this device</div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Capture</h2>
+              <p class="panel-subtitle">API key, bill type, and screenshot input.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="field">
+                <label class="label" for="apiKey">OpenRouter API key</label>
+                <input id="apiKey" type="password" autocomplete="off" placeholder="Paste your OpenRouter API key">
+                <div class="tiny">Stored locally in your browser only.</div>
+              </div>
+
+              <div class="field">
+                <div class="field-row">
+                  <div>
+                    <label class="label" for="billType">Bill type</label>
+                    <select id="billType"></select>
+                  </div>
+                  <div style="min-width: 136px;">
+                    <label class="label" for="newBillType">Add type</label>
+                    <input id="newBillType" type="text" placeholder="e.g. Water">
+                  </div>
+                </div>
+                <div class="inline">
+                  <button class="btn btn-ghost" id="addBillTypeBtn" type="button">Add bill type</button>
+                  <span class="tiny">TNB is the default.</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Screenshot</label>
+                <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload or paste a bill screenshot">
+                  <div class="dropzone-top">
+                    <div>
+                      <p class="dropzone-title">Drop, paste, or choose a screenshot</p>
+                      <p class="dropzone-meta">Accepted: image file, clipboard image, or screenshot paste.</p>
+                    </div>
+                    <input id="fileInput" class="sr-only" type="file" accept="image/*">
+                    <button class="btn" id="chooseFileBtn" type="button">Choose file</button>
+                  </div>
+                  <div class="dropzone-file">
+                    <div id="thumbWrap" class="thumb-placeholder">No image yet</div>
+                    <div class="tiny" id="fileInfo">Upload a bill screenshot to begin.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" id="extractBtn" type="button">Extract with AI</button>
+                <button class="btn btn-ghost" id="clearImageBtn" type="button">Clear image</button>
+              </div>
+              <div class="status" id="captureStatus" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">History</h2>
+              <p class="panel-subtitle">Newest saved bills first.</p>
+            </div>
+            <div class="history-tools">
+              <label class="btn btn-ghost" for="importFile" style="cursor:pointer;">Import JSON</label>
+              <input id="importFile" class="sr-only" type="file" accept="application/json">
+              <label class="inline tiny" style="cursor:pointer;">
+                <input id="mergeImport" type="checkbox" checked>
+                Merge import
+              </label>
+              <button class="btn btn-ghost" id="exportBtn" type="button">Export JSON</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="historyList" class="history-list"></div>
+            <div class="status" id="historyStatus" aria-live="polite"></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Preview</h2>
+            <p class="panel-subtitle">Review and edit before saving.</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="preview-grid">
+            <div class="field full">
+              <label class="label" for="date">Bill date</label>
+              <input id="date" type="date">
+            </div>
+
+            <div class="field">
+              <label class="label" for="dueDate">Due date</label>
+              <input id="dueDate" type="date">
+            </div>
+
+            <div class="field">
+              <label class="label" for="amount">Total amount (RM)</label>
+              <input id="amount" type="number" step="0.01" min="0" placeholder="0.00">
+            </div>
+
+            <div class="field full">
+              <label class="label" for="period">Billing period</label>
+              <input id="period" type="text" placeholder="01/05/2026 - 31/05/2026">
+            </div>
+
+            <div class="field">
+              <label class="label" for="accountNo">Account number</label>
+              <input id="accountNo" type="text" placeholder="Account number">
+            </div>
+
+            <div class="field">
+              <label class="label" for="reference">Reference</label>
+              <input id="reference" type="text" placeholder="Any other reference">
+            </div>
+
+            <div class="field full">
+              <div class="btn-row">
+                <button class="btn btn-primary" id="saveBtn" type="button">Save bill</button>
+                <button class="btn btn-ghost" id="resetFormBtn" type="button">Reset preview</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="field">
+            <label class="label">Notes</label>
+            <div class="tiny">
+              Keyboard shortcuts: <strong>Ctrl/Command + Enter</strong> to extract, <strong>Ctrl/Command + S</strong> to save.
+            </div>
+          </div>
+
+          <div class="status" id="previewStatus" aria-live="polite"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="modal" id="viewer" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
+      <div class="modal-head">
+        <h3 class="modal-title" id="viewerTitle">Saved bill</h3>
+        <button class="btn btn-ghost" id="closeViewerBtn" type="button">Close</button>
+      </div>
+      <div class="modal-content">
+        <div class="modal-image-wrap">
+          <img id="viewerImage" class="modal-image" alt="Saved bill screenshot">
+        </div>
+        <div class="modal-details" id="viewerDetails"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script>
+    (function () {
+      const STORAGE = {
+        records: "bill-tracker-records-v1",
+        settings: "bill-tracker-settings-v1"
+      };
+
+      const DEFAULT_BILL_TYPE = "TNB";
+      const OPENROUTER_MODEL = "cohere/north-mini-code:free";
+      const OCR_LANGUAGE = "eng";
+      const MAX_WIDTH = 800;
+      const JPEG_QUALITY = 0.7;
+
+      const els = {
+        apiKey: document.getElementById("apiKey"),
+        billType: document.getElementById("billType"),
+        newBillType: document.getElementById("newBillType"),
+        addBillTypeBtn: document.getElementById("addBillTypeBtn"),
+        dropzone: document.getElementById("dropzone"),
+        fileInput: document.getElementById("fileInput"),
+        chooseFileBtn: document.getElementById("chooseFileBtn"),
+        thumbWrap: document.getElementById("thumbWrap"),
+        fileInfo: document.getElementById("fileInfo"),
+        extractBtn: document.getElementById("extractBtn"),
+        clearImageBtn: document.getElementById("clearImageBtn"),
+        captureStatus: document.getElementById("captureStatus"),
+        date: document.getElementById("date"),
+        dueDate: document.getElementById("dueDate"),
+        amount: document.getElementById("amount"),
+        period: document.getElementById("period"),
+        accountNo: document.getElementById("accountNo"),
+        reference: document.getElementById("reference"),
+        saveBtn: document.getElementById("saveBtn"),
+        resetFormBtn: document.getElementById("resetFormBtn"),
+        previewStatus: document.getElementById("previewStatus"),
+        historyList: document.getElementById("historyList"),
+        historyStatus: document.getElementById("historyStatus"),
+        exportBtn: document.getElementById("exportBtn"),
+        importFile: document.getElementById("importFile"),
+        mergeImport: document.getElementById("mergeImport"),
+        viewer: document.getElementById("viewer"),
+        viewerImage: document.getElementById("viewerImage"),
+        viewerDetails: document.getElementById("viewerDetails"),
+        closeViewerBtn: document.getElementById("closeViewerBtn")
+      };
+
+      let state = {
+        apiKey: "",
+        billTypes: [DEFAULT_BILL_TYPE],
+        currentImage: "",
+        currentImageName: "",
+        currentImageMime: "image/jpeg",
+        records: [],
+        activeRecordId: null
+      };
+
+      const formFields = ["date", "dueDate", "amount", "period", "accountNo", "reference"];
+
+      function defaultForm() {
+        return {
+          date: "",
+          dueDate: "",
+          amount: "",
+          period: "",
+          accountNo: "",
+          reference: ""
+        };
+      }
+
+      let form = defaultForm();
+
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(STORAGE.settings);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") {
+            state.apiKey = typeof parsed.apiKey === "string" ? parsed.apiKey : "";
+            const types = Array.isArray(parsed.billTypes) ? parsed.billTypes : [DEFAULT_BILL_TYPE];
+            state.billTypes = normalizeBillTypes(types);
+          }
+        } catch (err) {
+          console.warn("Unable to load settings", err);
+        }
+      }
+
+      function saveSettings() {
+        try {
+          localStorage.setItem(STORAGE.settings, JSON.stringify({
+            apiKey: state.apiKey,
+            billTypes: state.billTypes
+          }));
+        } catch (err) {
+          console.warn("Unable to save settings", err);
+        }
+      }
+
+      function loadRecords() {
+        try {
+          const raw = localStorage.getItem(STORAGE.records);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          const source = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.records) ? parsed.records : [];
+          return sortRecords(source.filter(Boolean).map(sanitizeRecord).filter(Boolean));
+        } catch (err) {
+          console.warn("Unable to load records", err);
+          return [];
+        }
+      }
+
+      function saveRecords() {
+        try {
+          localStorage.setItem(STORAGE.records, JSON.stringify(state.records));
+        } catch (err) {
+          showHistoryStatus("Could not save to localStorage. The storage may be full.", "error");
+          console.error(err);
+        }
+      }
+
+      function sanitizeRecord(record) {
+        if (!record || typeof record !== "object") return null;
+        const id = String(record.id || "").trim();
+        const createdAt = String(record.createdAt || "").trim();
+        if (!id || !createdAt) return null;
+
+        return {
+          id,
+          billType: String(record.billType || DEFAULT_BILL_TYPE).trim() || DEFAULT_BILL_TYPE,
+          date: String(record.date || "").trim(),
+          dueDate: String(record.dueDate || "").trim(),
+          period: String(record.period || "").trim(),
+          amount: toNumberValue(record.amount),
+          accountNo: String(record.accountNo || "").trim(),
+          reference: String(record.reference || "").trim(),
+          image: String(record.image || ""),
+          createdAt
+        };
+      }
+
+      function normalizeBillTypes(types) {
+        const seen = new Set();
+        const result = [];
+        const all = [DEFAULT_BILL_TYPE, ...types];
+        for (const item of all) {
+          const value = String(item || "").trim();
+          if (!value) continue;
+          const key = value.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          result.push(value);
+        }
+        const defaultIndex = result.findIndex((item) => item.toLowerCase() === DEFAULT_BILL_TYPE.toLowerCase());
+        if (defaultIndex > 0) {
+          result.splice(defaultIndex, 1);
+          result.unshift(DEFAULT_BILL_TYPE);
+        } else if (defaultIndex === -1) {
+          result.unshift(DEFAULT_BILL_TYPE);
+        }
+        return result;
+      }
+
+      function refreshBillTypeList(selectedValue = state.billTypes[0] || DEFAULT_BILL_TYPE) {
+        state.billTypes = normalizeBillTypes([
+          ...state.billTypes,
+          ...(state.records || []).map((record) => record.billType)
+        ]);
+
+        const current = String(selectedValue || DEFAULT_BILL_TYPE).trim() || DEFAULT_BILL_TYPE;
+        if (!state.billTypes.some((type) => type.toLowerCase() === current.toLowerCase())) {
+          state.billTypes = normalizeBillTypes([...state.billTypes, current]);
+        }
+
+        els.billType.innerHTML = "";
+        for (const type of state.billTypes) {
+          const option = document.createElement("option");
+          option.value = type;
+          option.textContent = type;
+          els.billType.appendChild(option);
+        }
+        els.billType.value = state.billTypes.find((type) => type.toLowerCase() === current.toLowerCase()) || DEFAULT_BILL_TYPE;
+      }
+
+      function addBillType(value) {
+        const clean = String(value || "").trim();
+        if (!clean) return false;
+        const exists = state.billTypes.some((type) => type.toLowerCase() === clean.toLowerCase());
+        if (exists) return false;
+        state.billTypes = normalizeBillTypes([...state.billTypes, clean]);
+        refreshBillTypeList(clean);
+        saveSettings();
+        return true;
+      }
+
+      function setStatus(el, message, kind = "") {
+        el.textContent = message || "";
+        el.className = "status" + (kind ? " " + kind : "");
+      }
+
+      function showCaptureStatus(message, kind = "") {
+        setStatus(els.captureStatus, message, kind);
+      }
+
+      function showPreviewStatus(message, kind = "") {
+        setStatus(els.previewStatus, message, kind);
+      }
+
+      function showHistoryStatus(message, kind = "") {
+        setStatus(els.historyStatus, message, kind);
+      }
+
+      function syncFormToInputs() {
+        for (const key of formFields) {
+          const value = form[key] ?? "";
+          if (els[key]) els[key].value = value;
+        }
+      }
+
+      function readFormFromInputs() {
+        form = {
+          date: els.date.value.trim(),
+          dueDate: els.dueDate.value.trim(),
+          amount: els.amount.value.trim(),
+          period: els.period.value.trim(),
+          accountNo: els.accountNo.value.trim(),
+          reference: els.reference.value.trim()
+        };
+      }
+
+      function resetPreview(keepBillType = true) {
+        form = defaultForm();
+        syncFormToInputs();
+        if (!keepBillType) {
+          els.billType.value = DEFAULT_BILL_TYPE;
+        }
+        showPreviewStatus("Preview cleared.", "warning");
+      }
+
+      function generateId() {
+        return "bill_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+      }
+
+      function getRecordSortTime(record) {
+        const primary = record?.date ? new Date(record.date) : null;
+        if (primary && !Number.isNaN(primary.getTime())) return primary.getTime();
+        const fallback = record?.createdAt ? new Date(record.createdAt) : null;
+        if (fallback && !Number.isNaN(fallback.getTime())) return fallback.getTime();
+        return 0;
+      }
+
+      function sortRecords(records) {
+        return [...records].sort((a, b) => {
+          const diff = getRecordSortTime(b) - getRecordSortTime(a);
+          if (diff !== 0) return diff;
+          return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+        });
+      }
+
+      function toNumberValue(value) {
+        if (typeof value === "number" && Number.isFinite(value)) return Number(value.toFixed(2));
+        const raw = String(value ?? "").trim();
+        if (!raw) return "";
+        const cleaned = raw
+          .replace(/rm/gi, "")
+          .replace(/[^\d.,-]/g, "")
+          .replace(/,/g, "");
+        const parsed = Number.parseFloat(cleaned);
+        return Number.isFinite(parsed) ? Number(parsed.toFixed(2)) : "";
+      }
+
+      function parseDateValue(value) {
+        const raw = String(value ?? "").trim();
+        if (!raw) return "";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+        const dmy = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+        if (dmy) {
+          const day = String(dmy[1]).padStart(2, "0");
+          const month = String(dmy[2]).padStart(2, "0");
+          return `${dmy[3]}-${month}-${day}`;
+        }
+        const parsed = new Date(raw);
+        if (!Number.isNaN(parsed.getTime())) {
+          return parsed.toISOString().slice(0, 10);
+        }
+        return raw;
+      }
+
+      function formatDateDisplay(value) {
+        if (!value) return "Not set";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          const date = new Date(value + "T00:00:00");
+          if (!Number.isNaN(date.getTime())) {
+            return new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" }).format(date);
+          }
+        }
+        return value;
+      }
+
+      function formatAmountDisplay(value) {
+        const num = toNumberValue(value);
+        if (num === "") return "RM -";
+        return `RM ${Number(num).toFixed(2)}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function makeRecordSummary(record) {
+        const pieces = [];
+        if (record.accountNo) pieces.push(`A/C ${record.accountNo}`);
+        if (record.period) pieces.push(record.period);
+        if (record.date) pieces.push(formatDateDisplay(record.date));
+        return pieces.join(" • ");
+      }
+
+      function renderThumb(target, image, label = "Image") {
+        if (!image) {
+          target.className = "thumb-placeholder";
+          target.textContent = "No image yet";
+          return;
+        }
+        const img = document.createElement("img");
+        img.className = "thumb";
+        img.src = image;
+        img.alt = label;
+        target.replaceChildren(img);
+      }
+
+      function renderCurrentImage() {
+        if (state.currentImage) {
+          renderThumb(els.thumbWrap, state.currentImage, state.currentImageName || "Current bill screenshot");
+          els.fileInfo.textContent = `${state.currentImageName || "Screenshot"} ready. It is compressed to fit storage and extraction quickly.`;
+        } else {
+          renderThumb(els.thumbWrap, "");
+          els.fileInfo.textContent = "Upload a bill screenshot to begin.";
+        }
+      }
+
+      function renderHistory() {
+        if (!state.records.length) {
+          els.historyList.innerHTML = `
+            <div class="empty-state">
+              No bills saved yet. Paste a screenshot, extract the fields, and save your first TNB record.
+            </div>
+          `;
+          return;
+        }
+
+        els.historyList.innerHTML = "";
+        for (const record of state.records) {
+          const card = document.createElement("div");
+          card.className = "record";
+          card.dataset.id = record.id;
+          card.tabIndex = 0;
+          card.innerHTML = `
+            <img class="record-thumb" src="${escapeHtml(record.image)}" alt="Saved bill preview">
+            <div class="record-body">
+              <div class="record-title">
+                <span>${escapeHtml(record.billType || DEFAULT_BILL_TYPE)}</span>
+                <span class="tag">${escapeHtml(record.accountNo || "No account")}</span>
+              </div>
+              <div class="record-meta">
+                <span>${escapeHtml(makeRecordSummary(record) || "No summary")}</span>
+              </div>
+              <div class="record-actions">
+                <button class="btn btn-ghost record-btn" type="button" data-action="view">View screenshot</button>
+                <button class="btn btn-danger record-btn" type="button" data-action="delete">Delete</button>
+              </div>
+            </div>
+            <div class="record-amount">${escapeHtml(formatAmountDisplay(record.amount))}</div>
+          `;
+          card.addEventListener("click", (event) => {
+            const action = event.target?.dataset?.action;
+            if (action === "delete") {
+              event.stopPropagation();
+              deleteRecord(record.id);
+              return;
+            }
+            if (action === "view") {
+              event.stopPropagation();
+              openViewer(record.id);
+              return;
+            }
+            openViewer(record.id);
+          });
+          card.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openViewer(record.id);
+            }
+          });
+          els.historyList.appendChild(card);
+        }
+      }
+
+      function normalizeImportedRecords(payload) {
+        const source = Array.isArray(payload) ? payload : Array.isArray(payload?.records) ? payload.records : [];
+        return source.map(sanitizeRecord).filter(Boolean);
+      }
+
+      function syncRecordsAndTypes(nextRecords) {
+        state.records = sortRecords(nextRecords);
+        state.billTypes = normalizeBillTypes([
+          ...state.billTypes,
+          ...state.records.map((record) => record.billType)
+        ]);
+        refreshBillTypeList(els.billType.value || DEFAULT_BILL_TYPE);
+        saveRecords();
+        saveSettings();
+        renderHistory();
+      }
+
+      async function fileToDataUrl(file) {
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(reader.error || new Error("Unable to read file"));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function compressDataUrl(dataUrl) {
+        return await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, MAX_WIDTH / Math.max(1, img.naturalWidth || img.width || 1));
+            const width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+            const height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              reject(new Error("Canvas unavailable"));
+              return;
+            }
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
+          };
+          img.onerror = () => reject(new Error("Unable to load image"));
+          img.src = dataUrl;
+        });
+      }
+
+      function setCurrentImage(dataUrl, name = "screenshot") {
+        state.currentImage = dataUrl;
+        state.currentImageName = name;
+        renderCurrentImage();
+        showCaptureStatus("Screenshot ready. You can extract now.", "success");
+      }
+
+      async function loadImageFromFile(file) {
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          showCaptureStatus("Please choose an image file.", "error");
+          return;
+        }
+
+        showCaptureStatus("Compressing image...", "");
+        try {
+          const raw = await fileToDataUrl(file);
+          const compressed = await compressDataUrl(raw);
+          setCurrentImage(compressed, file.name || "screenshot");
+        } catch (err) {
+          console.error(err);
+          showCaptureStatus("Could not read or compress the image.", "error");
+        }
+      }
+
+      function handlePaste(event) {
+        const items = event.clipboardData?.items || [];
+        for (const item of items) {
+          if (item.type && item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            if (file) {
+              event.preventDefault();
+              loadImageFromFile(file);
+              return;
+            }
+          }
+        }
+      }
+
+      function setFormFromExtraction(data) {
+        const parsed = {
+          date: parseDateValue(data.billDate ?? data.date),
+          dueDate: parseDateValue(data.dueDate),
+          amount: toNumberValue(data.amount),
+          period: String(data.period || "").trim(),
+          accountNo: String(data.accountNo || "").trim(),
+          reference: String(data.reference || "").trim()
+        };
+
+        form = parsed;
+        syncFormToInputs();
+
+        const extractedBillType = String(data.billType || "").trim();
+        if (extractedBillType) {
+          addBillType(extractedBillType);
+          els.billType.value = extractedBillType;
+        }
+      }
+
+      function buildExtractionPrompt(ocrText) {
+        const systemPrompt =
+          "You are a TNB bill extractor. Extract the following fields from the OCR text. Return ONLY a valid JSON object. " +
+          "Fields: accountNo, period, amount (number), billDate (YYYY-MM-DD), dueDate (YYYY-MM-DD), reference (string or null). " +
+          "If a field is not found, use null. Use the common TNB labels to help: NO. AKAUN, Akaun No., TEMPOH, Bil Untuk, BIL SEMASA, JUMLAH, TARIKH BIL, TARIKH AKHIR BAYARAN.";
+        const userPrompt = `OCR text from TNB bill:\n${ocrText}`;
+        return { systemPrompt, userPrompt };
+      }
+
+      function extractJsonCandidate(text) {
+        if (!text) return null;
+        const trimmed = String(text).trim();
+        const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+        const candidates = [fenced?.[1], trimmed];
+        for (const candidate of candidates) {
+          if (!candidate) continue;
+          const start = candidate.indexOf("{");
+          const end = candidate.lastIndexOf("}");
+          if (start >= 0 && end > start) {
+            const piece = candidate.slice(start, end + 1);
+            try {
+              return JSON.parse(piece);
+            } catch (err) {
+              // Try the next candidate.
+            }
+          }
+        }
+        return null;
+      }
+
+      async function extractWithAI() {
+        readFormFromInputs();
+        const apiKey = els.apiKey.value.trim();
+        if (!apiKey) {
+          showCaptureStatus("Paste your OpenRouter API key first.", "error");
+          els.apiKey.focus();
+          return;
+        }
+        if (!state.currentImage) {
+          showCaptureStatus("Add a screenshot before extracting.", "error");
+          return;
+        }
+
+        saveSettings();
+        els.extractBtn.disabled = true;
+        els.extractBtn.textContent = "Extracting...";
+        showCaptureStatus("Running OCR with Tesseract.js...", "");
+        try {
+          if (!window.Tesseract || typeof window.Tesseract.recognize !== "function") {
+            throw new Error("Tesseract.js failed to load.");
+          }
+
+          let lastStatus = "";
+          const ocrResult = await window.Tesseract.recognize(state.currentImage, OCR_LANGUAGE, {
+            logger: (message) => {
+              if (!message || !message.status) return;
+              const percent = typeof message.progress === "number" ? ` ${Math.round(message.progress * 100)}%` : "";
+              const text = `OCR: ${message.status}${percent}`;
+              if (text !== lastStatus) {
+                lastStatus = text;
+                showCaptureStatus(text, "");
+              }
+            }
+          });
+
+          const ocrText = String(ocrResult?.data?.text || "").trim();
+          if (!ocrText) {
+            throw new Error("OCR did not find readable text.");
+          }
+
+          const { systemPrompt, userPrompt } = buildExtractionPrompt(ocrText);
+          showCaptureStatus("Sending OCR text to OpenRouter...", "");
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+              "HTTP-Referer": location.href,
+              "X-Title": "Bill Tracker"
+            },
+            body: JSON.stringify({
+              model: OPENROUTER_MODEL,
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+              ],
+              temperature: 0,
+              max_tokens: 700
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`OpenRouter error ${response.status}: ${errorText.slice(0, 300)}`);
+          }
+
+          const payload = await response.json();
+          const content = payload?.choices?.[0]?.message?.content ?? "";
+          const parsed = extractJsonCandidate(Array.isArray(content) ? content.map((part) => part?.text || "").join("") : content);
+          if (!parsed) {
+            throw new Error("The model did not return JSON we could parse.");
+          }
+
+          setFormFromExtraction(parsed);
+          showCaptureStatus("Fields extracted. Review the preview, then save.", "success");
+          showPreviewStatus("Preview updated from AI extraction.", "success");
+        } catch (err) {
+          console.error(err);
+          showCaptureStatus(err?.message || "Extraction failed.", "error");
+        } finally {
+          els.extractBtn.disabled = false;
+          els.extractBtn.textContent = "Extract with AI";
+        }
+      }
+
+      function deleteRecord(recordId) {
+        const record = state.records.find((entry) => entry.id === recordId);
+        if (!record) return;
+        const ok = confirm(`Delete this bill record${record.accountNo ? ` (${record.accountNo})` : ""}?`);
+        if (!ok) return;
+
+        state.records = state.records.filter((entry) => entry.id !== recordId);
+        saveRecords();
+        renderHistory();
+        showHistoryStatus("Record deleted.", "warning");
+        if (state.activeRecordId === recordId) {
+          closeViewer();
+        }
+      }
+
+      function saveBill() {
+        readFormFromInputs();
+        const billType = els.billType.value || DEFAULT_BILL_TYPE;
+        if (!state.currentImage) {
+          showPreviewStatus("Please add a screenshot first.", "error");
+          return;
+        }
+
+        const record = sanitizeRecord({
+          id: generateId(),
+          billType,
+          date: parseDateValue(form.date),
+          dueDate: parseDateValue(form.dueDate),
+          period: form.period,
+          amount: toNumberValue(form.amount),
+          accountNo: form.accountNo,
+          reference: form.reference,
+          image: state.currentImage,
+          createdAt: new Date().toISOString()
+        });
+
+        if (!record) {
+          showPreviewStatus("Could not create the bill record.", "error");
+          return;
+        }
+
+        if (!state.billTypes.some((type) => type.toLowerCase() === billType.toLowerCase())) {
+          addBillType(billType);
+        }
+
+        state.records = sortRecords([record, ...state.records]);
+        state.billTypes = normalizeBillTypes([...state.billTypes, record.billType]);
+        refreshBillTypeList(record.billType);
+        saveRecords();
+        saveSettings();
+        renderHistory();
+        showPreviewStatus("Saved. Your record is now in history.", "success");
+        showCaptureStatus("Record saved successfully.", "success");
+        resetPreview(true);
+        state.currentImage = "";
+        state.currentImageName = "";
+        renderCurrentImage();
+      }
+
+      function openViewer(recordId) {
+        const record = state.records.find((entry) => entry.id === recordId);
+        if (!record) return;
+        state.activeRecordId = recordId;
+        els.viewerImage.src = record.image || "";
+        els.viewerImage.alt = `${record.billType || DEFAULT_BILL_TYPE} bill screenshot`;
+
+        const details = [
+          ["Bill type", record.billType || DEFAULT_BILL_TYPE],
+          ["Bill date", formatDateDisplay(record.date)],
+          ["Due date", formatDateDisplay(record.dueDate)],
+          ["Billing period", record.period || "Not set"],
+          ["Total amount", formatAmountDisplay(record.amount)],
+          ["Account number", record.accountNo || "Not set"],
+          ["Reference", record.reference || "Not set"],
+          ["Created at", new Intl.DateTimeFormat(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short"
+          }).format(new Date(record.createdAt))]
+        ];
+
+        els.viewerDetails.innerHTML = details.map(([label, value]) => `
+          <div class="detail">
+            <label>${escapeHtml(label)}</label>
+            <div>${escapeHtml(value)}</div>
+          </div>
+        `).join("");
+
+        els.viewer.classList.add("open");
+        els.viewer.setAttribute("aria-hidden", "false");
+      }
+
+      function closeViewer() {
+        els.viewer.classList.remove("open");
+        els.viewer.setAttribute("aria-hidden", "true");
+        state.activeRecordId = null;
+      }
+
+      function exportRecords() {
+        const payload = {
+          app: "Bill Tracker",
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          records: state.records
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `bill-tracker-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showHistoryStatus("Export started.", "success");
+      }
+
+      async function importRecords(file) {
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const imported = normalizeImportedRecords(parsed);
+          if (!imported.length) {
+            showHistoryStatus("No valid records were found in that JSON file.", "error");
+            return;
+          }
+
+          const merge = els.mergeImport.checked;
+          const combined = merge ? [...imported, ...state.records] : imported;
+          const deduped = Array.from(new Map(combined.map((record) => [record.id, record])).values());
+          syncRecordsAndTypes(deduped);
+          showHistoryStatus(`Imported ${imported.length} record(s).`, "success");
+        } catch (err) {
+          console.error(err);
+          showHistoryStatus("Import failed. Make sure the file is valid JSON.", "error");
+        } finally {
+          els.importFile.value = "";
+        }
+      }
+
+      function wireEvents() {
+        els.apiKey.value = state.apiKey;
+        refreshBillTypeList(DEFAULT_BILL_TYPE);
+        state.records = loadRecords();
+        state.billTypes = normalizeBillTypes([
+          ...state.billTypes,
+          ...state.records.map((record) => record.billType)
+        ]);
+        refreshBillTypeList(DEFAULT_BILL_TYPE);
+        renderCurrentImage();
+        renderHistory();
+        syncFormToInputs();
+        if (state.apiKey) showCaptureStatus("API key loaded from this browser.", "success");
+
+        els.apiKey.addEventListener("input", () => {
+          state.apiKey = els.apiKey.value.trim();
+          saveSettings();
+        });
+
+        els.billType.addEventListener("change", () => {
+          const value = els.billType.value || DEFAULT_BILL_TYPE;
+          if (!state.billTypes.some((type) => type.toLowerCase() === value.toLowerCase())) {
+            addBillType(value);
+          }
+          saveSettings();
+        });
+
+        els.newBillType.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            els.addBillTypeBtn.click();
+          }
+        });
+
+        els.addBillTypeBtn.addEventListener("click", () => {
+          const value = els.newBillType.value;
+          if (!value.trim()) {
+            showCaptureStatus("Type a new bill name first.", "warning");
+            return;
+          }
+          const added = addBillType(value);
+          if (added) {
+            els.newBillType.value = "";
+            showCaptureStatus(`Added "${value.trim()}".`, "success");
+          } else {
+            showCaptureStatus("That bill type already exists.", "warning");
+          }
+        });
+
+        els.chooseFileBtn.addEventListener("click", () => els.fileInput.click());
+        els.dropzone.addEventListener("click", (event) => {
+          if (event.target === els.chooseFileBtn) return;
+          els.fileInput.click();
+        });
+        els.dropzone.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            els.fileInput.click();
+          }
+        });
+        els.dropzone.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          els.dropzone.classList.add("is-dragover");
+        });
+        els.dropzone.addEventListener("dragleave", () => {
+          els.dropzone.classList.remove("is-dragover");
+        });
+        els.dropzone.addEventListener("drop", (event) => {
+          event.preventDefault();
+          els.dropzone.classList.remove("is-dragover");
+          const file = event.dataTransfer?.files?.[0];
+          if (file) loadImageFromFile(file);
+        });
+
+        els.fileInput.addEventListener("change", () => {
+          const file = els.fileInput.files?.[0];
+          if (file) loadImageFromFile(file);
+          els.fileInput.value = "";
+        });
+
+        document.addEventListener("paste", handlePaste);
+
+        els.clearImageBtn.addEventListener("click", () => {
+          state.currentImage = "";
+          state.currentImageName = "";
+          renderCurrentImage();
+          showCaptureStatus("Screenshot cleared.", "warning");
+        });
+
+        els.extractBtn.addEventListener("click", extractWithAI);
+        els.saveBtn.addEventListener("click", saveBill);
+        els.resetFormBtn.addEventListener("click", () => resetPreview(true));
+
+        formFields.forEach((key) => {
+          const el = els[key];
+          if (!el) return;
+          el.addEventListener("input", () => {
+            readFormFromInputs();
+          });
+        });
+
+        els.exportBtn.addEventListener("click", exportRecords);
+        els.importFile.addEventListener("change", () => {
+          const file = els.importFile.files?.[0];
+          if (file) importRecords(file);
+        });
+
+        els.closeViewerBtn.addEventListener("click", closeViewer);
+        els.viewer.addEventListener("click", (event) => {
+          if (event.target === els.viewer) closeViewer();
+        });
+
+        document.addEventListener("keydown", (event) => {
+          const isMac = navigator.platform.toUpperCase().includes("MAC");
+          const mod = isMac ? event.metaKey : event.ctrlKey;
+          if (mod && event.key === "Enter") {
+            event.preventDefault();
+            extractWithAI();
+          }
+          if (mod && event.key.toLowerCase() === "s") {
+            event.preventDefault();
+            saveBill();
+          }
+          if (event.key === "Escape" && els.viewer.classList.contains("open")) {
+            closeViewer();
+          }
+        });
+      }
+
+      loadSettings();
+      state.records = loadRecords();
+      state.billTypes = normalizeBillTypes([
+        ...state.billTypes,
+        ...state.records.map((record) => record.billType)
+      ]);
+      wireEvents();
+      showHistoryStatus(state.records.length ? `Loaded ${state.records.length} saved record(s).` : "Ready to save your first bill.", "success");
+    })();
+  </script>
+</body>
+</html>
